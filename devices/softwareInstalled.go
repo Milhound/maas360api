@@ -6,9 +6,9 @@ import (
 	"io"
 	"log"
 	"net/http"
-	"time"
 
 	auth_api "maas360api/auth"
+	"maas360api/internal/constants"
 )
 
 type Attribute struct {
@@ -57,13 +57,9 @@ func doGetSoftwareInstalled(url string, maasToken string) (*SoftwareInstalledRes
 		return nil, fmt.Errorf("error creating HTTP request: %v", err)
 	}
 
-	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Accept", "application/json")
-	req.Header.Set("Authorization", fmt.Sprintf("MaaS token=\"%s\"", maasToken))
-
-	client := &http.Client{
-		Timeout: 10 * time.Second,
-	}
+	req.Header.Set(constants.ContentTypeHeader, constants.ContentTypeJSON)
+	req.Header.Set(constants.AcceptHeader, constants.ContentTypeJSON)
+	req.Header.Set(constants.AuthorizationHeader, fmt.Sprintf(constants.MaaSTokenPrefix, maasToken))
 
 	resp, err := client.Do(req)
 	if err != nil {

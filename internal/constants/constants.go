@@ -2,15 +2,15 @@ package constants
 
 // HTTP Headers
 const (
-	ContentTypeHeader     = "Content-Type"
-	AcceptHeader         = "Accept"
-	AuthorizationHeader  = "Authorization"
+	ContentTypeHeader   = "Content-Type"
+	AcceptHeader        = "Accept"
+	AuthorizationHeader = "Authorization"
 )
 
 // Content Types
 const (
-	ContentTypeJSON       = "application/json"
-	ContentTypeForm       = "application/x-www-form-urlencoded"
+	ContentTypeJSON = "application/json"
+	ContentTypeForm = "application/x-www-form-urlencoded"
 )
 
 // MaaS360 specific constants

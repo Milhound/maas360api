@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"io"
 	auth_api "maas360api/auth"
-	"net/http"
+	httputil "maas360api/internal/http"
 )
 
 type CoreAttributes struct {
@@ -53,24 +53,15 @@ func GetDevice(billingID string, deviceID string, maasToken string) (*CoreAttrib
 
 	searchURL := fmt.Sprintf("%s/device-apis/devices/1.0/core/%s?deviceId=%s", serviceURL, billingID, deviceID)
 
-	req, err := http.NewRequest("GET", searchURL, nil)
+	resp, err := httputil.DoMaaSRequest(httputil.RequestOptions{
+		Method:    "GET",
+		URL:       searchURL,
+		MaaSToken: maasToken,
+	})
 	if err != nil {
-		return nil, fmt.Errorf("error creating HTTP request: %v", err)
-	}
-
-	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Accept", "application/json")
-	req.Header.Set("Authorization", fmt.Sprintf("MaaS token=\"%s\"", maasToken))
-
-	resp, err := client.Do(req)
-	if err != nil {
-		return nil, fmt.Errorf("error making HTTP request: %v", err)
+		return nil, err
 	}
 	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("unexpected HTTP status: %s", resp.Status)
-	}
 	if resp.Body == nil {
 		return nil, fmt.Errorf("response body is nil")
 	}
