@@ -9,6 +9,7 @@ import (
 	"time"
 
 	auth_api "maas360api/auth"
+	"maas360api/internal/constants"
 )
 
 type DeviceAction struct {
@@ -66,9 +67,9 @@ func GetDeviceActions(billingID string, deviceID string, maasToken string) (*Dev
 	if err != nil {
 		return nil, fmt.Errorf("error creating HTTP request: %v", err)
 	}
-	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-	req.Header.Set("Accept", "application/json")
-	req.Header.Set("Authorization", fmt.Sprintf("MaaS token=\"%s\"", maasToken))
+	req.Header.Set(constants.ContentTypeHeader, constants.ContentTypeForm)
+	req.Header.Set(constants.AcceptHeader, constants.ContentTypeJSON)
+	req.Header.Set(constants.AuthorizationHeader, fmt.Sprintf(constants.MaaSTokenPrefix, maasToken))
 
 	resp, err := client.Do(req)
 	if err != nil {
@@ -156,9 +157,9 @@ func doAction(billingID string, deviceID string, actionID string, actionName str
 	if err != nil {
 		return fmt.Errorf("error creating HTTP request: %v", err)
 	}
-	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Accept", "application/json")
-	req.Header.Set("Authorization", fmt.Sprintf("MaaS token=\"%s\"", maasToken))
+	req.Header.Set(constants.ContentTypeHeader, constants.ContentTypeJSON)
+	req.Header.Set(constants.AcceptHeader, constants.ContentTypeJSON)
+	req.Header.Set(constants.AuthorizationHeader, fmt.Sprintf(constants.MaaSTokenPrefix, maasToken))
 
 	resp, err := client.Do(req)
 	if err != nil {

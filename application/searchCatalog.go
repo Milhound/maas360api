@@ -9,6 +9,7 @@ import (
 	"net/url"
 
 	auth_api "maas360api/auth"
+	"maas360api/internal/constants"
 )
 
 type CatalogApp struct {
@@ -103,9 +104,9 @@ func doSearchCatalogRequest(url string, maasToken string) ([]CatalogApp, error) 
 		return nil, fmt.Errorf("error creating HTTP request: %v", err)
 	}
 
-	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-	req.Header.Set("Accept", "application/json")
-	req.Header.Set("Authorization", fmt.Sprintf("MaaS token=\"%s\"", maasToken))
+	req.Header.Set(constants.ContentTypeHeader, constants.ContentTypeForm)
+	req.Header.Set(constants.AcceptHeader, constants.ContentTypeJSON)
+	req.Header.Set(constants.AuthorizationHeader, fmt.Sprintf(constants.MaaSTokenPrefix, maasToken))
 
 	resp, err := client.Do(req)
 	if err != nil {
