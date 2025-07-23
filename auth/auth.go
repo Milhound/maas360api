@@ -8,13 +8,12 @@ import (
 	"io"
 	"log"
 	"net/http"
-	"time"
+
+	"maas360api/internal/constants"
+	httputil "maas360api/internal/http"
 )
 
 const (
-	PLATFORM string = "3"
-	VERSION  string = "1.0"
-
 	M1 = "https://services.fiberlink.com"
 	M2 = "https://services.m2.maas360.com"
 	M3 = "https://services.m3.maas360.com"
@@ -53,9 +52,7 @@ type AuthResponse struct {
 }
 
 // client is the HTTP client used for making requests to the MaaS360 API.
-var client = &http.Client{
-	Timeout: 10 * time.Second,
-}
+var client = httputil.GetSharedClient()
 
 // helper function to do the auth or refresh call
 // It constructs the request, sends it, and processes the response.
@@ -77,8 +74,8 @@ func doAuthRequest(serviceURL string, billingID string, path string, auth maaS36
 		return nil, fmt.Errorf("error creating HTTP request: %v", err)
 	}
 
-	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Accept", "application/json")
+	req.Header.Set(constants.ContentTypeHeader, constants.ContentTypeJSON)
+	req.Header.Set(constants.AcceptHeader, constants.ContentTypeJSON)
 	for k, v := range extraHeaders {
 		req.Header.Set(k, v)
 	}
@@ -126,8 +123,8 @@ func authentication(billingID string, appID string, accessKey string, username s
 	auth := maaS360AdminAuth{
 		BillingID:  billingID,
 		AppID:      appID,
-		PlatformID: PLATFORM,
-		AppVersion: VERSION,
+		PlatformID: constants.Platform,
+		AppVersion: constants.Version,
 		AccessKey:  accessKey,
 		Username:   username,
 		Password:   password,
@@ -150,8 +147,8 @@ func refreshToken(billingID string, appID string, accessKey string, username str
 	auth := maaS360AdminAuth{
 		BillingID:    billingID,
 		AppID:        appID,
-		PlatformID:   PLATFORM,
-		AppVersion:   VERSION,
+		PlatformID:   constants.Platform,
+		AppVersion:   constants.Version,
 		AccessKey:    accessKey,
 		Username:     username,
 		RefreshToken: refreshToken,

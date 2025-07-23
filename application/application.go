@@ -1,10 +1,7 @@
 package application_api
 
 import (
-	"net/http"
-	"time"
+	httputil "maas360api/internal/http"
 )
 
-var client = &http.Client{
-	Timeout: 10 * time.Second,
-}
+var client = httputil.GetSharedClient()

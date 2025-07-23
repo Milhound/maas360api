@@ -48,7 +48,6 @@ func doSendMessageRequest(url string, maasToken string) error {
 	req.Header.Set("Accept", "application/json")
 	req.Header.Set("Authorization", fmt.Sprintf("MaaS token=\"%s\"", maasToken))
 
-	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
 		return fmt.Errorf("error sending request: %v", err)

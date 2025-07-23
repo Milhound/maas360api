@@ -1,23 +1,27 @@
 package client
 
 import (
-	"log"
+	"errors"
 
 	application_api "maas360api/application"
 	auth_api "maas360api/auth"
 	device_api "maas360api/devices"
 )
 
+// Client represents a MaaS360 API client with authentication credentials
+// and methods for interacting with the MaaS360 API.
 type Client struct {
-	BillingID string
-	AppID     string
-	AccessKey string
-	Username  string
-	Password  string
-	Refresh   string
-	MaasToken string
+	BillingID string // MaaS360 billing ID
+	AppID     string // Application ID for API access
+	AccessKey string // Application access key
+	Username  string // Username for authentication
+	Password  string // Password for authentication
+	Refresh   string // Refresh token for token-based authentication
+	MaasToken string // Current authentication token
 }
 
+// NewClient creates a new MaaS360 API client with the provided credentials.
+// Either password or refresh token should be provided for authentication.
 func NewClient(billingID, appID, accessKey, username, password, refresh string) *Client {
 	return &Client{
 		BillingID: billingID,
@@ -29,10 +33,15 @@ func NewClient(billingID, appID, accessKey, username, password, refresh string) 
 	}
 }
 
+// GetBasicauth generates a Basic Authentication header value for the client's credentials.
+// Returns an empty string if username or password is empty.
 func (c *Client) GetBasicauth() string {
 	return auth_api.GetBasicAuth(c.Username, c.Password)
 }
 
+// Authenticate obtains an authentication token from the MaaS360 API.
+// This must be called before using other API methods.
+// Returns an error if authentication fails or if no valid token is received.
 func (c *Client) Authenticate() error {
 	var err error
 	c.MaasToken, _, err = auth_api.GetToken(c.BillingID, c.AppID, c.AccessKey, c.Username, c.Password, c.Refresh)
@@ -40,7 +49,7 @@ func (c *Client) Authenticate() error {
 		return err
 	}
 	if c.MaasToken == "" {
-		return log.Output(2, "Failed to retrieve MaaS360 auth token")
+		return errors.New("failed to retrieve MaaS360 auth token")
 	}
 	return nil
 }
