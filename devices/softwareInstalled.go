@@ -33,25 +33,25 @@ type SoftwareInstalledResponse struct {
 }
 
 // GetSoftwareInstalled retrieves the software installed on a specific device in MaaS360.
-func GetSoftwareInstalled(billingID string, deviceID string, token string) (*SoftwareInstalledResponse, error) {
+func GetSoftwareInstalled(billingID string, deviceID string, maasToken string) (*SoftwareInstalledResponse, error) {
 	if len(billingID) == 0 || len(deviceID) == 0 {
 		return nil, fmt.Errorf("billing ID and device ID cannot be empty")
 	}
-	instance, err := auth_api.GetInstance(billingID)
+	serviceURL, err := auth_api.GetServiceURL(billingID)
 	if err != nil {
 		return nil, err
 	}
 
 	// Construct the hardware inventory URL
-	softwareInstalledURL := fmt.Sprintf("%s/device-apis/devices/1.0/softwareInstalled/%s?deviceId=%s", instance, billingID, deviceID)
+	softwareInstalledURL := fmt.Sprintf("%s/device-apis/devices/1.0/softwareInstalled/%s?deviceId=%s", serviceURL, billingID, deviceID)
 
 	// Perform the hardware inventory request
-	return doGetSoftwareInstalled(softwareInstalledURL, token)
+	return doGetSoftwareInstalled(softwareInstalledURL, maasToken)
 }
 
 // doGetSoftwareInstalled sends a request to the MaaS360 API to retrieve software installed on a device.
 // It constructs the request, sends it, and processes the response.
-func doGetSoftwareInstalled(url string, token string) (*SoftwareInstalledResponse, error) {
+func doGetSoftwareInstalled(url string, maasToken string) (*SoftwareInstalledResponse, error) {
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		return nil, fmt.Errorf("error creating HTTP request: %v", err)
@@ -59,7 +59,7 @@ func doGetSoftwareInstalled(url string, token string) (*SoftwareInstalledRespons
 
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Accept", "application/json")
-	req.Header.Set("Authorization", fmt.Sprintf("MaaS token=\"%s\"", token))
+	req.Header.Set("Authorization", fmt.Sprintf("MaaS token=\"%s\"", maasToken))
 
 	client := &http.Client{
 		Timeout: 10 * time.Second,

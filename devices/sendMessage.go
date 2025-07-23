@@ -21,24 +21,24 @@ type actionResponse struct {
 
 // SendMessage sends a message to a specific device in MaaS360.
 // It requires a billing ID, device ID, an authentication token, and the message details.
-func SendMessage(billingID string, deviceID string, token string, messageTitle string, message string) error {
+func SendMessage(billingID string, deviceID string, messageTitle string, message string, maasToken string) error {
 	if len(billingID) == 0 || len(deviceID) == 0 {
 		return fmt.Errorf("billing ID and device ID cannot be empty")
 	}
-	instance, err := auth_api.GetInstance(billingID)
+	serviceURL, err := auth_api.GetServiceURL(billingID)
 	if err != nil {
 		return err
 	}
 
 	// Construct the message URL
-	messageURL := fmt.Sprintf("%s/device-apis/devices/1.0/sendMessage/%s?deviceId=%s&messageTitle=%s&message=%s", instance, billingID, deviceID, url.PathEscape(messageTitle), url.PathEscape(message))
+	messageURL := fmt.Sprintf("%s/device-apis/devices/1.0/sendMessage/%s?deviceId=%s&messageTitle=%s&message=%s", serviceURL, billingID, deviceID, url.PathEscape(messageTitle), url.PathEscape(message))
 
-	return doSendMessageRequest(messageURL, token)
+	return doSendMessageRequest(messageURL, maasToken)
 }
 
 // doSendMessageRequest sends a request to the MaaS360 API to send a message to a device.
 // It constructs the request, sends it, and processes the response.
-func doSendMessageRequest(url string, token string) error {
+func doSendMessageRequest(url string, maasToken string) error {
 	req, err := http.NewRequest("POST", url, nil)
 	if err != nil {
 		return fmt.Errorf("error creating HTTP request: %v", err)
@@ -46,7 +46,7 @@ func doSendMessageRequest(url string, token string) error {
 
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	req.Header.Set("Accept", "application/json")
-	req.Header.Set("Authorization", fmt.Sprintf("MaaS token=\"%s\"", token))
+	req.Header.Set("Authorization", fmt.Sprintf("MaaS token=\"%s\"", maasToken))
 
 	client := &http.Client{}
 	resp, err := client.Do(req)

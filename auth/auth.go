@@ -59,7 +59,7 @@ var client = &http.Client{
 
 // helper function to do the auth or refresh call
 // It constructs the request, sends it, and processes the response.
-func doAuthRequest(instance, billingID, path string, auth maaS360AdminAuth, extraHeaders map[string]string) (*AuthResponse, error) {
+func doAuthRequest(serviceURL string, billingID string, path string, auth maaS360AdminAuth, extraHeaders map[string]string) (*AuthResponse, error) {
 	params := authParams{
 		Request: authRequest{
 			Auth: auth,
@@ -71,7 +71,7 @@ func doAuthRequest(instance, billingID, path string, auth maaS360AdminAuth, extr
 		return nil, fmt.Errorf("error marshaling JSON: %v", err)
 	}
 
-	url := fmt.Sprintf("%s%s/customer/%s", instance, path, billingID)
+	url := fmt.Sprintf("%s%s/customer/%s", serviceURL, path, billingID)
 	req, err := http.NewRequest("POST", url, bytes.NewReader(jsonData))
 	if err != nil {
 		return nil, fmt.Errorf("error creating HTTP request: %v", err)
@@ -114,11 +114,11 @@ func doAuthRequest(instance, billingID, path string, auth maaS360AdminAuth, extr
 
 // Authenticate with username/password api call
 // This function sends a request to the MaaS360 authentication API to get an auth token.
-func authentication(billingID, appID, accessKey, username, password string) (*AuthResponse, error) {
+func authentication(billingID string, appID string, accessKey string, username string, password string) (*AuthResponse, error) {
 	if len(billingID) == 0 {
 		return nil, fmt.Errorf("billing ID cannot be empty")
 	}
-	instance, err := GetInstance(billingID)
+	serviceURL, err := GetServiceURL(billingID)
 	if err != nil {
 		return nil, err
 	}
@@ -133,16 +133,16 @@ func authentication(billingID, appID, accessKey, username, password string) (*Au
 		Password:   password,
 	}
 
-	return doAuthRequest(instance, billingID, "/auth-apis/auth/2.0/authenticate", auth, nil)
+	return doAuthRequest(serviceURL, billingID, "/auth-apis/auth/2.0/authenticate", auth, nil)
 }
 
 // Refresh token authentication api call
 // This function sends a request to the MaaS360 authentication API to refresh an existing auth token.
-func refreshToken(billingID, appID, accessKey, username, refreshToken string) (*AuthResponse, error) {
+func refreshToken(billingID string, appID string, accessKey string, username string, refreshToken string) (*AuthResponse, error) {
 	if len(billingID) == 0 {
 		return nil, fmt.Errorf("billing ID cannot be empty")
 	}
-	instance, err := GetInstance(billingID)
+	serviceURL, err := GetServiceURL(billingID)
 	if err != nil {
 		return nil, err
 	}
@@ -157,12 +157,12 @@ func refreshToken(billingID, appID, accessKey, username, refreshToken string) (*
 		RefreshToken: refreshToken,
 	}
 
-	return doAuthRequest(instance, billingID, "/auth-apis/auth/2.0/refreshToken", auth, nil)
+	return doAuthRequest(serviceURL, billingID, "/auth-apis/auth/2.0/refreshToken", auth, nil)
 }
 
-// GetInstance returns the MaaS360 instance URL based on the billing ID.
+// GetServiceURL returns the MaaS360 service URL based on the billing ID.
 // It checks the first character of the billing ID to determine the instance.
-func GetInstance(billingID string) (string, error) {
+func GetServiceURL(billingID string) (string, error) {
 	if len(billingID) == 0 {
 		return "", fmt.Errorf("billing ID cannot be empty")
 	}

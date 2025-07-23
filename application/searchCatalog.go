@@ -49,9 +49,8 @@ type CatalogAppsResponse struct {
 }
 
 // SearchCatalog retrieves applications from the MaaS360 catalog based on the provided filters.
-func SearchCatalog(billingID string, token string, filters map[string]string) ([]CatalogApp, error) {
+func SearchCatalog(billingID string, filters map[string]string, maasToken string) ([]CatalogApp, error) {
 	// Parameters:
-	// billingID: The billing ID of the MaaS360 instance.
 	// pageSize: Limit number of applications returned at one time. Allowed page sizes: 25, 50, 100, 200, 250. Default value: 25.
 	// pageNumber: The page number of the results to return. Default value: 1.
 	// appName: Partial Application Name string that needs to be searched for.
@@ -64,11 +63,11 @@ func SearchCatalog(billingID string, token string, filters map[string]string) ([
 	// instantUpdate: Possible values: 0: Disabled, 1: Enabled.
 
 	// Validate required fields
-	if len(billingID) == 0 || len(token) == 0 {
-		return nil, fmt.Errorf("billing ID and token cannot be empty")
+	if len(billingID) == 0 || len(maasToken) == 0 {
+		return nil, fmt.Errorf("billing ID and maasToken cannot be empty")
 	}
-	// Get the MaaS360 instance URL
-	instance, err := auth_api.GetInstance(billingID)
+	// Get the MaaS360 service URL
+	serviceURL, err := auth_api.GetServiceURL(billingID)
 	if err != nil {
 		return nil, err
 	}
@@ -91,14 +90,14 @@ func SearchCatalog(billingID string, token string, filters map[string]string) ([
 			return nil, fmt.Errorf("appId is a required parameter and cannot be empty")
 		}
 
-		searchURL := fmt.Sprintf("%s/application-apis/applications/2.0/search/customer/%s?", instance, billingID) + searchFilters.Encode()
-		return doSearchCatalogRequest(searchURL, token)
+		searchURL := fmt.Sprintf("%s/application-apis/applications/2.0/search/customer/%s?", serviceURL, billingID) + searchFilters.Encode()
+		return doSearchCatalogRequest(searchURL, maasToken)
 	}
 }
 
 // doSearchCatalogRequest sends a request to the MaaS360 API to search for catalog applications.
 // It constructs the request, sends it, and processes the response.
-func doSearchCatalogRequest(url string, token string) ([]CatalogApp, error) {
+func doSearchCatalogRequest(url string, maasToken string) ([]CatalogApp, error) {
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		return nil, fmt.Errorf("error creating HTTP request: %v", err)
@@ -106,7 +105,7 @@ func doSearchCatalogRequest(url string, token string) ([]CatalogApp, error) {
 
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	req.Header.Set("Accept", "application/json")
-	req.Header.Set("Authorization", fmt.Sprintf("MaaS token=\"%s\"", token))
+	req.Header.Set("Authorization", fmt.Sprintf("MaaS token=\"%s\"", maasToken))
 
 	resp, err := client.Do(req)
 	if err != nil {
@@ -130,8 +129,8 @@ func doSearchCatalogRequest(url string, token string) ([]CatalogApp, error) {
 
 // PrintCatalogApps retrieves and prints the catalog applications for a given billing ID.
 // It uses SearchCatalog to get the list of applications and formats the output.
-func PrintCatalogApps(billingID string, token string, filters map[string]string) {
-	apps, err := SearchCatalog(billingID, token, filters)
+func PrintCatalogApps(billingID string, filters map[string]string, maasToken string) {
+	apps, err := SearchCatalog(billingID, filters, maasToken)
 	if err != nil {
 		log.Fatalf("Error searching catalog: %v", err)
 	}

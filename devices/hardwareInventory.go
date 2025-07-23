@@ -33,25 +33,25 @@ type HardwareInventoryResponse struct {
 
 // GetHardwareInventory retrieves the hardware inventory for a specific device in MaaS360.
 // It requires a billing ID, device ID, and an authentication token.
-func GetHardwareInventory(billingID string, deviceID string, token string) (*HardwareInventoryResponse, error) {
+func GetHardwareInventory(billingID string, deviceID string, maasToken string) (*HardwareInventoryResponse, error) {
 	if len(billingID) == 0 || len(deviceID) == 0 {
 		return nil, fmt.Errorf("billing ID and device ID cannot be empty")
 	}
-	instance, err := auth_api.GetInstance(billingID)
+	serviceURL, err := auth_api.GetServiceURL(billingID)
 	if err != nil {
 		return nil, err
 	}
 
 	// Construct the hardware inventory URL
-	hardwareInventoryURL := fmt.Sprintf("%s/device-apis/devices/1.0/hardwareInventory/%s?deviceId=%s", instance, billingID, deviceID)
+	hardwareInventoryURL := fmt.Sprintf("%s/device-apis/devices/1.0/hardwareInventory/%s?deviceId=%s", serviceURL, billingID, deviceID)
 
 	// Perform the hardware inventory request
-	return doHardwareInventoryRequest(hardwareInventoryURL, token)
+	return doHardwareInventoryRequest(hardwareInventoryURL, maasToken)
 }
 
 // doHardwareInventoryRequest sends a request to the MaaS360 API to retrieve hardware inventory for a device.
 // It constructs the request, sends it, and processes the response.
-func doHardwareInventoryRequest(url string, token string) (*HardwareInventoryResponse, error) {
+func doHardwareInventoryRequest(url string, maasToken string) (*HardwareInventoryResponse, error) {
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		return nil, fmt.Errorf("error creating HTTP request: %v", err)
@@ -59,7 +59,7 @@ func doHardwareInventoryRequest(url string, token string) (*HardwareInventoryRes
 
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Accept", "application/json")
-	req.Header.Set("Authorization", fmt.Sprintf("MaaS token=\"%s\"", token))
+	req.Header.Set("Authorization", fmt.Sprintf("MaaS token=\"%s\"", maasToken))
 
 	resp, err := client.Do(req)
 	if err != nil {
@@ -86,8 +86,8 @@ func doHardwareInventoryRequest(url string, token string) (*HardwareInventoryRes
 
 // PrintHardwareInventory prints the hardware inventory for a specific device in a human-readable format.
 // It retrieves the hardware inventory using GetHardwareInventory and formats the output.
-func PrintHardwareInventory(billingID string, deviceID string, token string) {
-	hardwareInventory, err := GetHardwareInventory(billingID, deviceID, token)
+func PrintHardwareInventory(billingID string, deviceID string, maasToken string) {
+	hardwareInventory, err := GetHardwareInventory(billingID, deviceID, maasToken)
 	if err != nil {
 		log.Fatalf("Error getting hardware inventory: %v", err)
 	}

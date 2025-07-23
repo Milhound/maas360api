@@ -16,16 +16,16 @@ type DeviceActionResponse struct {
 }
 
 // LockDevice sends a request to lock a specific device in MaaS360.
-func LockDevice(billingID string, deviceID string, token string) error {
-	if billingID == "" || deviceID == "" || token == "" {
-		return fmt.Errorf("billingID, deviceID, and token must not be empty")
+func LockDevice(billingID string, deviceID string, maasToken string) error {
+	if billingID == "" || deviceID == "" || maasToken == "" {
+		return fmt.Errorf("billingID, deviceID, and maasToken must not be empty")
 	}
-	instance, err := auth_api.GetInstance(billingID)
+	serviceURL, err := auth_api.GetServiceURL(billingID)
 	if err != nil {
-		return fmt.Errorf("error getting instance: %v", err)
+		return fmt.Errorf("error getting serviceURL: %v", err)
 	}
 
-	url := fmt.Sprintf("%s/device-apis/devices/1.0/lockDevice/%s?deviceId=%s", instance, billingID, deviceID)
+	url := fmt.Sprintf("%s/device-apis/devices/1.0/lockDevice/%s?deviceId=%s", serviceURL, billingID, deviceID)
 
 	req, err := http.NewRequest("POST", url, nil)
 	if err != nil {
@@ -33,7 +33,7 @@ func LockDevice(billingID string, deviceID string, token string) error {
 	}
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	req.Header.Set("Accept", "application/json")
-	req.Header.Set("Authorization", fmt.Sprintf("MaaS token=\"%s\"", token))
+	req.Header.Set("Authorization", fmt.Sprintf("MaaS token=\"%s\"", maasToken))
 	resp, err := client.Do(req)
 	if err != nil {
 		return fmt.Errorf("error making HTTP request: %v", err)

@@ -52,23 +52,23 @@ func (d *DeviceActionsResponse) GetActionByID(actionID string) (*DeviceAction, e
 }
 
 // GetDeviceActions retrieves the list of available device actions for a specific device.
-func GetDeviceActions(billingID string, deviceID string, token string) (*DeviceActionsResponse, error) {
-	if billingID == "" || deviceID == "" || token == "" {
-		return nil, fmt.Errorf("billingID, deviceID, and token must not be empty")
+func GetDeviceActions(billingID string, deviceID string, maasToken string) (*DeviceActionsResponse, error) {
+	if billingID == "" || deviceID == "" || maasToken == "" {
+		return nil, fmt.Errorf("billingID, deviceID, and maasToken must not be empty")
 	}
-	instance, err := auth_api.GetInstance(billingID)
+	serviceURL, err := auth_api.GetServiceURL(billingID)
 	if err != nil {
-		return nil, fmt.Errorf("error getting instance: %v", err)
+		return nil, fmt.Errorf("error getting serviceURL: %v", err)
 	}
 
-	url := fmt.Sprintf("%s/device-apis/devices/1.0/deviceActions/%s?deviceId=%s", instance, billingID, deviceID)
+	url := fmt.Sprintf("%s/device-apis/devices/1.0/deviceActions/%s?deviceId=%s", serviceURL, billingID, deviceID)
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		return nil, fmt.Errorf("error creating HTTP request: %v", err)
 	}
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	req.Header.Set("Accept", "application/json")
-	req.Header.Set("Authorization", fmt.Sprintf("MaaS token=\"%s\"", token))
+	req.Header.Set("Authorization", fmt.Sprintf("MaaS token=\"%s\"", maasToken))
 
 	resp, err := client.Do(req)
 	if err != nil {
@@ -91,16 +91,16 @@ func GetDeviceActions(billingID string, deviceID string, token string) (*DeviceA
 }
 
 // PerformDeviceAction performs a specific action on a device.
-func PerformDeviceAction(billingID string, deviceID string, actionID string, additionalParams map[string]string, token string, basicAuth string) error {
+func PerformDeviceAction(billingID string, deviceID string, actionID string, additionalParams map[string]string, maasToken string) error {
 	// Notes:
 	// MDM_LOCATE: Not applicable action for iOS devices
-	//
+	// MDM_SCHEDULE_OS_UPDATE: Available for iOS devices, requires additionalParams
 
-	if billingID == "" || deviceID == "" || actionID == "" || token == "" || basicAuth == "" {
-		return fmt.Errorf("billingID, deviceID, actionID, and basicAuth must not be empty")
+	if billingID == "" || deviceID == "" || actionID == "" || maasToken == "" {
+		return fmt.Errorf("billingID, deviceID, actionID, and maasToken must not be empty")
 	}
 
-	actionsResponse, err := GetDeviceActions(billingID, deviceID, token)
+	actionsResponse, err := GetDeviceActions(billingID, deviceID, maasToken)
 	if err != nil {
 		return fmt.Errorf("error getting device actions: %v", err)
 	}
@@ -110,16 +110,12 @@ func PerformDeviceAction(billingID string, deviceID string, actionID string, add
 		return fmt.Errorf("error getting action by name: %v", err)
 	}
 
-	if actionID == "ANDROID_CUSTOM_CMDS" && additionalParams == nil {
+	if (actionID == "ANDROID_CUSTOM_CMDS" || actionID == "MDM_SCHEDULE_OS_UPDATE") && additionalParams == nil {
 		return fmt.Errorf("additionalParams must not be nil for action %s", actionID)
 	}
 
 	fmt.Printf("Performing action: %s\n", action.ActionName)
-	if actionID == "ANDROID_CUSTOM_CMDS" && additionalParams != nil {
-		err = doAction(billingID, deviceID, action.ActionID, action.ActionName, additionalParams, basicAuth)
-	} else {
-		err = doAction(billingID, deviceID, action.ActionID, action.ActionName, nil, basicAuth)
-	}
+	err = doAction(billingID, deviceID, action.ActionID, action.ActionName, additionalParams, maasToken)
 
 	if err != nil {
 		return fmt.Errorf("error performing action: %v", err)
@@ -129,13 +125,13 @@ func PerformDeviceAction(billingID string, deviceID string, actionID string, add
 
 // doAction sends a request to perform a specific action on a device.
 // It constructs the request, sends it, and processes the response.
-func doAction(billingID string, deviceID string, actionID string, actionName string, additionalParams map[string]string, basicAuth string) error {
-	if billingID == "" || deviceID == "" || actionID == "" || actionName == "" || basicAuth == "" {
-		return fmt.Errorf("billingID, deviceID, actionName, and basicAuth must not be empty")
+func doAction(billingID string, deviceID string, actionID string, actionName string, additionalParams map[string]string, maasToken string) error {
+	if billingID == "" || deviceID == "" || actionID == "" || actionName == "" || maasToken == "" {
+		return fmt.Errorf("billingID, deviceID, actionName, and maasToken must not be empty")
 	}
-	instance, err := auth_api.GetInstance(billingID)
+	serviceURL, err := auth_api.GetServiceURL(billingID)
 	if err != nil {
-		return fmt.Errorf("error getting instance: %v", err)
+		return fmt.Errorf("error getting serviceURL: %v", err)
 	}
 	var reqBodyRaw ActionRequest
 	reqBodyRaw.Name = actionName
@@ -155,15 +151,14 @@ func doAction(billingID string, deviceID string, actionID string, actionName str
 		return fmt.Errorf("error marshalling request body: %v", err)
 	}
 
-	url := fmt.Sprintf("%s/action-apis/actions/1.0/customer/%s/action/%s/device/%s", instance, billingID, actionID, deviceID)
+	url := fmt.Sprintf("%s/action-apis/actions/1.0/customer/%s/action/%s/device/%s", serviceURL, billingID, actionID, deviceID)
 	req, err := http.NewRequest("POST", url, bytes.NewReader(reqBody))
 	if err != nil {
 		return fmt.Errorf("error creating HTTP request: %v", err)
 	}
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Accept", "application/json")
-	req.Header.Set("Authorization", basicAuth)
-	//req.Header.Set("Authorization", fmt.Sprintf("MaaS token=\"%s\"", token))
+	req.Header.Set("Authorization", fmt.Sprintf("MaaS token=\"%s\"", maasToken))
 
 	resp, err := client.Do(req)
 	if err != nil {

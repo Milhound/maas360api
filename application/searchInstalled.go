@@ -31,7 +31,7 @@ type InstalledAppsResponse struct {
 }
 
 // SearchInstalledApps retrieves installed applications based on the provided filters.
-func SearchInstalledApps(billingID, token string, filters map[string]string) ([]InstalledApp, error) {
+func SearchInstalledApps(billingID string, filters map[string]string, maasToken string) ([]InstalledApp, error) {
 	// Search parameters: All are optional
 	// partialAppName - Partial or full App Name string that needs to be searched for
 	// appID - Full AppID that needs to be searched for
@@ -40,18 +40,18 @@ func SearchInstalledApps(billingID, token string, filters map[string]string) ([]
 	// pageNumber - Results specific to a particular page. Default is first page
 
 	// Validate required fields
-	if len(billingID) == 0 || len(token) == 0 {
-		return nil, fmt.Errorf("billing ID and token cannot be empty")
+	if len(billingID) == 0 || len(maasToken) == 0 {
+		return nil, fmt.Errorf("billing ID and maasToken cannot be empty")
 	}
 
-	// Get the MaaS360 instance URL
-	instance, err := auth_api.GetInstance(billingID)
+	// Get the MaaS360 service URL
+	serviceURL, err := auth_api.GetServiceURL(billingID)
 	if err != nil {
 		return nil, err
 	}
 	if filters == nil {
-		searchURL := fmt.Sprintf("%s/application-apis/installedApps/1.0/search/%s?", instance, billingID)
-		return doSearchRequest(searchURL, token)
+		searchURL := fmt.Sprintf("%s/application-apis/installedApps/1.0/search/%s?", serviceURL, billingID)
+		return doSearchRequest(searchURL, maasToken)
 	} else if len(filters) == 0 {
 		return nil, fmt.Errorf("search parameters cannot be empty")
 	} else {
@@ -65,14 +65,14 @@ func SearchInstalledApps(billingID, token string, filters map[string]string) ([]
 				searchFilters.Add(key, value)
 			}
 		}
-		searchURL := fmt.Sprintf("%s/application-apis/installedApps/1.0/search/%s?", instance, billingID) + searchFilters.Encode()
-		return doSearchRequest(searchURL, token)
+		searchURL := fmt.Sprintf("%s/application-apis/installedApps/1.0/search/%s?", serviceURL, billingID) + searchFilters.Encode()
+		return doSearchRequest(searchURL, maasToken)
 	}
 }
 
 // doSearchRequest sends a request to the MaaS360 API to search for installed applications.
 // It constructs the request, sends it, and processes the response.
-func doSearchRequest(url string, token string) ([]InstalledApp, error) {
+func doSearchRequest(url string, maasToken string) ([]InstalledApp, error) {
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		return nil, fmt.Errorf("error creating HTTP request: %v", err)
@@ -80,7 +80,7 @@ func doSearchRequest(url string, token string) ([]InstalledApp, error) {
 
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	req.Header.Set("Accept", "application/json")
-	req.Header.Set("Authorization", fmt.Sprintf("MaaS token=\"%s\"", token))
+	req.Header.Set("Authorization", fmt.Sprintf("MaaS token=\"%s\"", maasToken))
 
 	resp, err := client.Do(req)
 	if err != nil {
@@ -107,8 +107,8 @@ func doSearchRequest(url string, token string) ([]InstalledApp, error) {
 
 // PrintAllSoftwareInstalled retrieves and prints all installed software for a given billing ID.
 // It uses SearchInstalledApps to get the list of installed applications and formats the output.
-func PrintAllSoftwareInstalled(billingID string, token string, filters map[string]string) {
-	apps, err := SearchInstalledApps(billingID, token, filters)
+func PrintAllSoftwareInstalled(billingID string, filters map[string]string, maasToken string) {
+	apps, err := SearchInstalledApps(billingID, filters, maasToken)
 	if err != nil {
 		log.Fatalf("Error searching installed apps: %v", err)
 	}

@@ -90,7 +90,7 @@ func (d *DeviceOrDevices) UnmarshalJSON(data []byte) error {
 
 // Search performs a search for devices in the MaaS360 API based on the provided filters.
 // It returns a list of devices that match the search criteria.
-func SearchDevices(billingID string, token string, filters map[string]string) ([]Device, error) {
+func SearchDevices(billingID string, filters map[string]string, maasToken string) ([]Device, error) {
 	// Possible search filters:
 	// "deviceStatus": "InActive", // ["Active", "InActive"] Default is "Active"
 	// "partialDeviceName":   "",
@@ -114,12 +114,12 @@ func SearchDevices(billingID string, token string, filters map[string]string) ([
 	// "pswdCompliance": "OOC", // ["OOC", "ALL"] Default is "ALL"
 
 	// Validate required fields
-	if len(billingID) == 0 || len(token) == 0 {
-		return nil, fmt.Errorf("billingID and token are required")
+	if len(billingID) == 0 || len(maasToken) == 0 {
+		return nil, fmt.Errorf("billingID and maasToken are required")
 	}
 
-	// Get the MaaS360 instance URL
-	instance, err := auth_api.GetInstance(billingID)
+	// Get the MaaS360 service URL
+	serviceURL, err := auth_api.GetServiceURL(billingID)
 	if err != nil {
 		return nil, err
 	}
@@ -135,14 +135,14 @@ func SearchDevices(billingID string, token string, filters map[string]string) ([
 		}
 	}
 
-	searchURL := fmt.Sprintf("%s/device-apis/devices/2.0/search/customer/%s?", instance, billingID) + searchFilters.Encode()
+	searchURL := fmt.Sprintf("%s/device-apis/devices/2.0/search/customer/%s?", serviceURL, billingID) + searchFilters.Encode()
 
-	return doSearchDevicesRequest(searchURL, token)
+	return doSearchDevicesRequest(searchURL, maasToken)
 }
 
 // doSearchRequest sends a search request to the MaaS360 API and returns the list of devices.
 // It constructs the request, sends it, and processes the response.
-func doSearchDevicesRequest(url string, token string) ([]Device, error) {
+func doSearchDevicesRequest(url string, maasToken string) ([]Device, error) {
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		return nil, fmt.Errorf("error creating HTTP request: %v", err)
@@ -150,7 +150,7 @@ func doSearchDevicesRequest(url string, token string) ([]Device, error) {
 
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Accept", "application/json")
-	req.Header.Set("Authorization", fmt.Sprintf("MaaS token=\"%s\"", token))
+	req.Header.Set("Authorization", fmt.Sprintf("MaaS token=\"%s\"", maasToken))
 
 	resp, err := client.Do(req)
 	if err != nil {
@@ -181,8 +181,8 @@ func doSearchDevicesRequest(url string, token string) ([]Device, error) {
 
 // PrintDevices retrieves and prints the list of devices based on the provided filters.
 // It calls SearchDevices to get the devices and then logs their details.
-func PrintDevices(billingID string, token string, filters map[string]string) {
-	devices, err := SearchDevices(billingID, token, filters)
+func PrintDevices(billingID string, filters map[string]string, maasToken string) {
+	devices, err := SearchDevices(billingID, filters, maasToken)
 	if err != nil {
 		log.Fatalf("Error searching devices: %v", err)
 	}
