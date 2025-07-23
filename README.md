@@ -15,7 +15,7 @@
 
 ```bash
 go get github.com/Milhound/maas360api
-````
+```
 
 ## 🔐 Authentication
 
@@ -31,7 +31,7 @@ import (
 )
 
 func main() {
-    authCredentials := auth_api.MaaS360AdminAuth{
+    authCredentials := auth.MaaS360AdminAuth{
         BillingID:  "<YOUR_BILLING_ID>",
         AppID:      "<YOUR_APP_ID>",
         PlatformID: constants.Platform,
@@ -42,7 +42,7 @@ func main() {
         // RefreshToken: "<YOUR_REFRESH_TOKEN>", // Optional, can be empty if not using refresh token
     }
 
-    MaaS360, err := MaaS360api.Authenticate(authCredentials)
+    MaaS360, err := client.Authenticate(authCredentials)
     if err != nil {
         log.Fatalf("Error authenticating: %v", err)
     }
@@ -56,6 +56,6 @@ func main() {
 
 Contributions are welcome! Please:
 
-* Open issues for bugs or feature requests
-* Fork and submit pull requests for enhancements
-* Follow idiomatic Go and clean code principles
+- Open issues for bugs or feature requests
+- Fork and submit pull requests for enhancements
+- Follow idiomatic Go and clean code principles

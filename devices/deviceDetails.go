@@ -1,4 +1,4 @@
-package devices_api
+package devices
 
 import (
 	"encoding/json"

@@ -1,4 +1,4 @@
-package application_api
+package application
 
 import (
 	httputil "maas360api/internal/http"
