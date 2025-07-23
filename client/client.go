@@ -1,7 +1,7 @@
 package client
 
 import (
-	"log"
+	"errors"
 
 	application_api "maas360api/application"
 	auth_api "maas360api/auth"
@@ -40,7 +40,7 @@ func (c *Client) Authenticate() error {
 		return err
 	}
 	if c.MaasToken == "" {
-		return log.Output(2, "Failed to retrieve MaaS360 auth token")
+		return errors.New("failed to retrieve MaaS360 auth token")
 	}
 	return nil
 }
