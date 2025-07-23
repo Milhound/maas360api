@@ -51,7 +51,7 @@ func DoMaaSRequest(opts RequestOptions) (*http.Response, error) {
 	if ctx == nil {
 		ctx = context.Background()
 	}
-	
+
 	req, err := http.NewRequestWithContext(ctx, opts.Method, opts.URL, opts.Body)
 	if err != nil {
 		return nil, fmt.Errorf("error creating HTTP request: %v", err)
