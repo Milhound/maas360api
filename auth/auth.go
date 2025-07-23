@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 
 	"maas360api/internal/constants"
@@ -21,7 +20,7 @@ const (
 	M6 = "https://services.m6.maas360.com"
 )
 
-type maaS360AdminAuth struct {
+type MaaS360AdminAuth struct {
 	BillingID    string `json:"billingID"`
 	PlatformID   string `json:"platformID"`
 	AppVersion   string `json:"appVersion"`
@@ -33,7 +32,7 @@ type maaS360AdminAuth struct {
 }
 
 type authRequest struct {
-	Auth maaS360AdminAuth `json:"maaS360AdminAuth"`
+	Auth MaaS360AdminAuth `json:"maaS360AdminAuth"`
 }
 
 type authParams struct {
@@ -54,12 +53,25 @@ type AuthResponse struct {
 // client is the HTTP client used for making requests to the MaaS360 API.
 var client = httputil.GetSharedClient()
 
-// helper function to do the auth or refresh call
-// It constructs the request, sends it, and processes the response.
-func doAuthRequest(serviceURL string, billingID string, path string, auth maaS360AdminAuth, extraHeaders map[string]string) (*AuthResponse, error) {
+// Authenticate with username/password api call
+// This function sends a request to the MaaS360 authentication API to get an auth token.
+func Auth(authCredentials MaaS360AdminAuth) (*AuthResponseBody, error) {
+	if authCredentials.BillingID == "" || authCredentials.AppID == "" || authCredentials.AccessKey == "" || authCredentials.Username == "" {
+		return nil, fmt.Errorf("billingID, appID, accessKey, and username must not be empty")
+	}
+	if authCredentials.Password == "" && authCredentials.RefreshToken == "" {
+		return nil, fmt.Errorf("either password or refresh token must be provided for authentication")
+	}
+	if authCredentials.PlatformID == "" {
+		authCredentials.PlatformID = constants.Platform
+	}
+	if authCredentials.AppVersion == "" {
+		authCredentials.AppVersion = constants.Version
+	}
+
 	params := authParams{
 		Request: authRequest{
-			Auth: auth,
+			Auth: authCredentials,
 		},
 	}
 
@@ -67,8 +79,11 @@ func doAuthRequest(serviceURL string, billingID string, path string, auth maaS36
 	if err != nil {
 		return nil, fmt.Errorf("error marshaling JSON: %v", err)
 	}
-
-	url := fmt.Sprintf("%s%s/customer/%s", serviceURL, path, billingID)
+	serviceURL, err := GetServiceURL(authCredentials.BillingID)
+	if err != nil {
+		return nil, fmt.Errorf("error getting service URL: %v", err)
+	}
+	url := fmt.Sprintf("%s%s/customer/%s", serviceURL, "/auth-apis/auth/2.0/authenticate", authCredentials.BillingID)
 	req, err := http.NewRequest("POST", url, bytes.NewReader(jsonData))
 	if err != nil {
 		return nil, fmt.Errorf("error creating HTTP request: %v", err)
@@ -76,9 +91,6 @@ func doAuthRequest(serviceURL string, billingID string, path string, auth maaS36
 
 	req.Header.Set(constants.ContentTypeHeader, constants.ContentTypeJSON)
 	req.Header.Set(constants.AcceptHeader, constants.ContentTypeJSON)
-	for k, v := range extraHeaders {
-		req.Header.Set(k, v)
-	}
 
 	resp, err := client.Do(req)
 	if err != nil {
@@ -106,55 +118,7 @@ func doAuthRequest(serviceURL string, billingID string, path string, auth maaS36
 		return nil, fmt.Errorf("error from MaaS360: %s (code: %d)", parsed.Wrapper.ErrorDesc, parsed.Wrapper.ErrorCode)
 	}
 
-	return &parsed, nil
-}
-
-// Authenticate with username/password api call
-// This function sends a request to the MaaS360 authentication API to get an auth token.
-func authentication(billingID string, appID string, accessKey string, username string, password string) (*AuthResponse, error) {
-	if len(billingID) == 0 {
-		return nil, fmt.Errorf("billing ID cannot be empty")
-	}
-	serviceURL, err := GetServiceURL(billingID)
-	if err != nil {
-		return nil, err
-	}
-
-	auth := maaS360AdminAuth{
-		BillingID:  billingID,
-		AppID:      appID,
-		PlatformID: constants.Platform,
-		AppVersion: constants.Version,
-		AccessKey:  accessKey,
-		Username:   username,
-		Password:   password,
-	}
-
-	return doAuthRequest(serviceURL, billingID, "/auth-apis/auth/2.0/authenticate", auth, nil)
-}
-
-// Refresh token authentication api call
-// This function sends a request to the MaaS360 authentication API to refresh an existing auth token.
-func refreshToken(billingID string, appID string, accessKey string, username string, refreshToken string) (*AuthResponse, error) {
-	if len(billingID) == 0 {
-		return nil, fmt.Errorf("billing ID cannot be empty")
-	}
-	serviceURL, err := GetServiceURL(billingID)
-	if err != nil {
-		return nil, err
-	}
-
-	auth := maaS360AdminAuth{
-		BillingID:    billingID,
-		AppID:        appID,
-		PlatformID:   constants.Platform,
-		AppVersion:   constants.Version,
-		AccessKey:    accessKey,
-		Username:     username,
-		RefreshToken: refreshToken,
-	}
-
-	return doAuthRequest(serviceURL, billingID, "/auth-apis/auth/2.0/refreshToken", auth, nil)
+	return &parsed.Wrapper, nil
 }
 
 // GetServiceURL returns the MaaS360 service URL based on the billing ID.
@@ -179,34 +143,6 @@ func GetServiceURL(billingID string) (string, error) {
 	}
 }
 
-// GetToken retrieves an authentication token from MaaS360.
-// It can authenticate using a username/password or refresh an existing token.
-// It returns the auth token, refresh token, and any error encountered.
-func GetToken(billingID, appID, accessKey, username, password, refresh string) (string, string, error) {
-	var response *AuthResponse
-	var err error
-
-	if password != "" {
-		response, err = authentication(billingID, appID, accessKey, username, password)
-		if err != nil {
-			log.Printf("Authentication failed: %v", err)
-		} else {
-			printTokens(*response)
-		}
-	} else if refresh != "" {
-		response, err = refreshToken(billingID, appID, accessKey, username, refresh)
-		if err != nil {
-			log.Printf("Refresh token failed: %v", err)
-		} else {
-			printTokens(*response)
-		}
-	} else {
-		return "", "", fmt.Errorf("either password or refresh token must be provided")
-	}
-
-	return response.Wrapper.AuthToken, response.Wrapper.RefreshToken, nil
-}
-
 // GetBasicAuth returns a Basic Auth header value for the given username and password. Including "Basic " prefix.
 func GetBasicAuth(username, password string) string {
 	if username == "" || password == "" {
@@ -215,13 +151,4 @@ func GetBasicAuth(username, password string) string {
 	rawText := fmt.Sprintf("%s:%s", username, password)
 	encodedText := base64.StdEncoding.EncodeToString([]byte(rawText))
 	return fmt.Sprintf("Basic %s", encodedText)
-}
-
-// printTokens prints the authentication tokens from the response
-// It is used to display the auth token and refresh token if available.
-func printTokens(resp AuthResponse) {
-	fmt.Printf("Auth Token: %s\n", resp.Wrapper.AuthToken)
-	if resp.Wrapper.RefreshToken != "" {
-		fmt.Printf("Refresh Token: %s\n", resp.Wrapper.RefreshToken)
-	}
 }

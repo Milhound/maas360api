@@ -6,31 +6,19 @@ import (
 	application_api "maas360api/application"
 	auth_api "maas360api/auth"
 	device_api "maas360api/devices"
+	"maas360api/internal/constants"
 )
 
 // Client represents a MaaS360 API client with authentication credentials
 // and methods for interacting with the MaaS360 API.
 type Client struct {
-	BillingID string // MaaS360 billing ID
-	AppID     string // Application ID for API access
-	AccessKey string // Application access key
-	Username  string // Username for authentication
-	Password  string // Password for authentication
-	Refresh   string // Refresh token for token-based authentication
-	MaasToken string // Current authentication token
-}
-
-// NewClient creates a new MaaS360 API client with the provided credentials.
-// Either password or refresh token should be provided for authentication.
-func NewClient(billingID, appID, accessKey, username, password, refresh string) *Client {
-	return &Client{
-		BillingID: billingID,
-		AppID:     appID,
-		AccessKey: accessKey,
-		Username:  username,
-		Password:  password,
-		Refresh:   refresh,
-	}
+	BillingID    string // MaaS360 billing ID
+	AppID        string // Application ID for API access
+	AccessKey    string // Application access key
+	Username     string // Username for authentication
+	Password     string // Password for authentication
+	RefreshToken string // Refresh token for token-based authentication
+	MaasToken    string // Current authentication token
 }
 
 // GetBasicauth generates a Basic Authentication header value for the client's credentials.
@@ -42,16 +30,31 @@ func (c *Client) GetBasicauth() string {
 // Authenticate obtains an authentication token from the MaaS360 API.
 // This must be called before using other API methods.
 // Returns an error if authentication fails or if no valid token is received.
-func (c *Client) Authenticate() error {
-	var err error
-	c.MaasToken, _, err = auth_api.GetToken(c.BillingID, c.AppID, c.AccessKey, c.Username, c.Password, c.Refresh)
+func Authenticate(credentials auth_api.MaaS360AdminAuth) (*Client, error) {
+	credentials.PlatformID = constants.Platform
+	credentials.AppVersion = constants.Version
+
+	authResponse, err := auth_api.Auth(credentials)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	if c.MaasToken == "" {
-		return errors.New("failed to retrieve MaaS360 auth token")
+	if authResponse.AuthToken == "" {
+		return nil, errors.New("failed to retrieve MaaS360 auth token")
 	}
-	return nil
+	if authResponse.RefreshToken == "" {
+		return nil, errors.New("failed to retrieve MaaS360 refresh token")
+	}
+
+	c := &Client{
+		BillingID:    credentials.BillingID,
+		AppID:        credentials.AppID,
+		AccessKey:    credentials.AccessKey,
+		Username:     credentials.Username,
+		Password:     credentials.Password,
+		RefreshToken: authResponse.RefreshToken,
+		MaasToken:    authResponse.AuthToken,
+	}
+	return c, nil
 }
 func (c *Client) GetDeviceActions(deviceID string) (*device_api.DeviceActionsResponse, error) {
 	return device_api.GetDeviceActions(c.BillingID, deviceID, c.MaasToken)
