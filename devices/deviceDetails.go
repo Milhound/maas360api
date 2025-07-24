@@ -9,7 +9,7 @@ import (
 	"maas360api/internal/types"
 )
 
-type CoreAttributes struct {
+type DeviceIdentifiers struct {
 	Maas360DeviceID              string            `json:"maas360DeviceID"`
 	DeviceName                   string            `json:"deviceName"`
 	CustomAssetNumber            string            `json:"customAssetNumber"`
@@ -43,10 +43,10 @@ type CoreAttributes struct {
 }
 
 type DeviceResponse struct {
-	Device CoreAttributes `json:"device"`
+	Device DeviceIdentifiers `json:"device"`
 }
 
-func GetDevice(billingID string, deviceID string, maasToken string) (*CoreAttributes, error) {
+func GetDevice(billingID string, deviceID string, maasToken string) (*DeviceIdentifiers, error) {
 	serviceURL, err := auth_api.GetServiceURL(billingID)
 	if err != nil {
 		return nil, err

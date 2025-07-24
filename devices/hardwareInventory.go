@@ -12,24 +12,10 @@ import (
 	"maas360api/internal/constants"
 )
 
-type DeviceAttribute struct {
-	AttributeKey   string `json:"key"`
-	AttributeType  string `json:"type"`
-	AttributeValue any    `json:"value"`
-}
-
 // Wrapper for the "deviceAttribute" slice
-type DeviceAttributesWrapper struct {
-	DeviceAttribute []DeviceAttribute `json:"deviceAttribute"`
-}
-
-type DeviceHardware struct {
-	DeviceAttributes DeviceAttributesWrapper `json:"deviceAttributes"`
-	ID               string                  `json:"maas360DeviceId"`
-}
 
 type HardwareInventoryResponse struct {
-	DeviceHardware DeviceHardware `json:"deviceHardware"`
+	DeviceHardware DeviceAttributesResponse `json:"deviceHardware"`
 }
 
 // GetHardwareInventory retrieves the hardware inventory for a specific device in MaaS360.
@@ -96,7 +82,7 @@ func PrintHardwareInventory(billingID string, deviceID string, maasToken string)
 		log.Fatal("No hardware inventory found for the device")
 	}
 	fmt.Printf("Hardware Inventory for Device ID %s:\n", deviceID)
-	for _, attr := range hardwareInventory.DeviceHardware.DeviceAttributes.DeviceAttribute {
+	for _, attr := range hardwareInventory.DeviceHardware.AttributeWrapper.DeviceAttributes {
 		// Handle different types of attribute values
 		if attr.AttributeValue == nil {
 			fmt.Printf(" %s: <nil>\n", attr.AttributeKey)

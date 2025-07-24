@@ -2,6 +2,7 @@ package client
 
 import (
 	"errors"
+	"time"
 
 	"maas360api/application"
 	"maas360api/auth"
@@ -9,9 +10,9 @@ import (
 	"maas360api/internal/constants"
 )
 
-// Client represents a MaaS360 API client with authentication credentials
+// MaaS360Client represents a MaaS360 API client with authentication credentials
 // and methods for interacting with the MaaS360 API.
-type Client struct {
+type MaaS360Client struct {
 	BillingID    string // MaaS360 billing ID
 	AppID        string // Application ID for API access
 	AccessKey    string // Application access key
@@ -23,14 +24,14 @@ type Client struct {
 
 // GetBasicauth generates a Basic Authentication header value for the client's credentials.
 // Returns an empty string if username or password is empty.
-func (c *Client) GetBasicauth() string {
+func (c *MaaS360Client) GetBasicauth() string {
 	return auth.GetBasicAuth(c.Username, c.Password)
 }
 
 // Authenticate obtains an authentication token from the MaaS360 API.
 // This must be called before using other API methods.
 // Returns an error if authentication fails or if no valid token is received.
-func Authenticate(credentials auth.MaaS360AdminAuth) (*Client, error) {
+func Authenticate(credentials auth.MaaS360AdminAuth) (*MaaS360Client, error) {
 	credentials.PlatformID = constants.Platform
 	credentials.AppVersion = constants.Version
 
@@ -45,7 +46,7 @@ func Authenticate(credentials auth.MaaS360AdminAuth) (*Client, error) {
 		return nil, errors.New("failed to retrieve MaaS360 refresh token")
 	}
 
-	c := &Client{
+	c := &MaaS360Client{
 		BillingID:    credentials.BillingID,
 		AppID:        credentials.AppID,
 		AccessKey:    credentials.AccessKey,
@@ -56,62 +57,73 @@ func Authenticate(credentials auth.MaaS360AdminAuth) (*Client, error) {
 	}
 	return c, nil
 }
-func (c *Client) GetDeviceActions(deviceID string) (*devices.DeviceActionsResponse, error) {
+func (c *MaaS360Client) GetDeviceActions(deviceID string) (*devices.DeviceActionsResponse, error) {
 	return devices.GetDeviceActions(c.BillingID, deviceID, c.MaasToken)
 }
 
-func (c *Client) PerformDeviceAction(deviceID string, actionID string, additionalParams map[string]string) error {
+func (c *MaaS360Client) PerformDeviceAction(deviceID string, actionID string, additionalParams map[string]string) error {
 	return devices.PerformDeviceAction(c.BillingID, deviceID, actionID, additionalParams, c.MaasToken)
 }
 
-func (c *Client) SendMessage(deviceID string, subject string, message string) error {
+func (c *MaaS360Client) SendMessage(deviceID string, subject string, message string) error {
 	return devices.SendMessage(c.BillingID, deviceID, subject, message, c.MaasToken)
 }
 
-func (c *Client) LockDevice(deviceID string) error {
+func (c *MaaS360Client) LockDevice(deviceID string) error {
 	return devices.LockDevice(c.BillingID, deviceID, c.MaasToken)
 }
 
-func (c *Client) GetHardwareInventory(deviceID string) (*devices.HardwareInventoryResponse, error) {
+func (c *MaaS360Client) GetHardwareInventory(deviceID string) (*devices.HardwareInventoryResponse, error) {
 	return devices.GetHardwareInventory(c.BillingID, deviceID, c.MaasToken)
 }
 
-func (c *Client) PrintHardwareInventory(deviceID string) {
+func (c *MaaS360Client) PrintHardwareInventory(deviceID string) {
 	devices.PrintHardwareInventory(c.BillingID, deviceID, c.MaasToken)
 }
 
-func (c *Client) GetSoftwareInstalled(deviceID string) (*devices.SoftwareInstalledResponse, error) {
+func (c *MaaS360Client) GetSoftwareInstalled(deviceID string) (*devices.SoftwareInstalledResponse, error) {
 	return devices.GetSoftwareInstalled(c.BillingID, deviceID, c.MaasToken)
 }
 
-func (c *Client) PrintSoftwareInstalled(deviceID string) {
+func (c *MaaS360Client) PrintSoftwareInstalled(deviceID string) {
 	devices.PrintSoftwareInstalled(c.BillingID, deviceID, c.MaasToken)
 }
 
-func (c *Client) GetDevice(deviceID string) (*devices.CoreAttributes, error) {
+func (c *MaaS360Client) GetDevice(deviceID string) (*devices.DeviceIdentifiers, error) {
 	return devices.GetDevice(c.BillingID, deviceID, c.MaasToken)
 }
 
-func (c *Client) SearchDevices(filters map[string]string) ([]devices.Device, error) {
+func (c *MaaS360Client) SearchDevices(filters map[string]string) ([]devices.Device, error) {
 	return devices.SearchDevices(c.BillingID, filters, c.MaasToken)
 }
 
-func (c *Client) PrintDevices(filters map[string]string) {
+func (c *MaaS360Client) PrintDevices(filters map[string]string) {
 	devices.PrintDevices(c.BillingID, filters, c.MaasToken)
 }
 
-func (c *Client) SearchCatalog(filters map[string]string) ([]application.CatalogApp, error) {
+func (c *MaaS360Client) SearchCatalog(filters map[string]string) ([]application.CatalogApp, error) {
 	return application.SearchCatalog(c.BillingID, filters, c.MaasToken)
 }
 
-func (c *Client) PrintCatalogApps(filters map[string]string) {
+func (c *MaaS360Client) PrintCatalogApps(filters map[string]string) {
 	application.PrintCatalogApps(c.BillingID, filters, c.MaasToken)
 }
 
-func (c *Client) SearchInstalledApps(filters map[string]string) ([]application.InstalledApp, error) {
+func (c *MaaS360Client) SearchInstalledApps(filters map[string]string) ([]application.InstalledApp, error) {
 	return application.SearchInstalledApps(c.BillingID, filters, c.MaasToken)
 }
 
-func (c *Client) PrintAllSoftwareInstalled(filters map[string]string) {
+func (c *MaaS360Client) PrintAllSoftwareInstalled(filters map[string]string) {
 	application.PrintAllSoftwareInstalled(c.BillingID, filters, c.MaasToken)
+}
+
+func (c *MaaS360Client) UpdateOS(deviceID string, osVersion string, targetLocalTime time.Time) error {
+	return devices.UpdateOS(c.BillingID, deviceID, osVersion, targetLocalTime, c.MaasToken)
+}
+
+func (c *MaaS360Client) GetNetworkInfo(deviceID string) ([]devices.DeviceAttribute, error) {
+	return devices.GetNetworkInfo(c.BillingID, deviceID, c.MaasToken)
+}
+func (c *MaaS360Client) PrintNetworkInfo(deviceID string) {
+	devices.PrintNetworkInfo(c.BillingID, deviceID, c.MaasToken)
 }
