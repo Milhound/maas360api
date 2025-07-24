@@ -8,7 +8,6 @@ import (
 	"net/http"
 	"net/url"
 
-	auth_api "maas360api/auth"
 	"maas360api/internal/constants"
 )
 
@@ -16,7 +15,7 @@ type InstalledApp struct {
 	AppID         string `json:"appID"`
 	AppName       string `json:"appName"`
 	DeviceCount   int    `json:"deviceCount"`
-	MajorVersions int    `json:"majorVersions"` // <-- change from string to int
+	MajorVersions int    `json:"majorVersions"`
 	Platform      string `json:"platform"`
 }
 
@@ -32,7 +31,7 @@ type InstalledAppsResponse struct {
 }
 
 // SearchInstalledApps retrieves installed applications based on the provided filters.
-func SearchInstalledApps(billingID string, filters map[string]string, maasToken string) ([]InstalledApp, error) {
+func SearchInstalledApps(serviceURL string, billingID string, filters map[string]string, maasToken string) ([]InstalledApp, error) {
 	// Search parameters: All are optional
 	// partialAppName - Partial or full App Name string that needs to be searched for
 	// appID - Full AppID that needs to be searched for
@@ -45,11 +44,6 @@ func SearchInstalledApps(billingID string, filters map[string]string, maasToken 
 		return nil, fmt.Errorf("billing ID and maasToken cannot be empty")
 	}
 
-	// Get the MaaS360 service URL
-	serviceURL, err := auth_api.GetServiceURL(billingID)
-	if err != nil {
-		return nil, err
-	}
 	if filters == nil {
 		searchURL := fmt.Sprintf("%s/application-apis/installedApps/1.0/search/%s?", serviceURL, billingID)
 		return doSearchRequest(searchURL, maasToken)
@@ -108,8 +102,8 @@ func doSearchRequest(url string, maasToken string) ([]InstalledApp, error) {
 
 // PrintAllSoftwareInstalled retrieves and prints all installed software for a given billing ID.
 // It uses SearchInstalledApps to get the list of installed applications and formats the output.
-func PrintAllSoftwareInstalled(billingID string, filters map[string]string, maasToken string) {
-	apps, err := SearchInstalledApps(billingID, filters, maasToken)
+func PrintAllSoftwareInstalled(serviceURL string, billingID string, filters map[string]string, maasToken string) {
+	apps, err := SearchInstalledApps(serviceURL, billingID, filters, maasToken)
 	if err != nil {
 		log.Fatalf("Error searching installed apps: %v", err)
 	}

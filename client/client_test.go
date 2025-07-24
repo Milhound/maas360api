@@ -1,14 +1,14 @@
 package client
 
 import (
-	auth_api "maas360api/auth"
+	"maas360api/auth"
 	"maas360api/internal/constants"
 	"testing"
 )
 
 // TestAuthenticate verifies that the client can be created and authenticated without errors
 func TestAuthenticate(t *testing.T) {
-	authCredentials := auth_api.MaaS360AdminAuth{
+	authCredentials := auth.MaaS360AdminAuth{
 		BillingID:  "123456",
 		AppID:      "testApp",
 		PlatformID: constants.Platform,
@@ -38,7 +38,7 @@ func TestAuthenticate(t *testing.T) {
 
 // TestGetBasicAuth verifies basic auth generation
 func TestGetBasicAuth(t *testing.T) {
-	authCredentials := auth_api.MaaS360AdminAuth{
+	authCredentials := auth.MaaS360AdminAuth{
 		BillingID:  "123456",
 		AppID:      "testApp",
 		PlatformID: constants.Platform,
@@ -60,7 +60,7 @@ func TestGetBasicAuth(t *testing.T) {
 
 // TestEmptyBasicAuth verifies empty basic auth handling
 func TestEmptyBasicAuth(t *testing.T) {
-	authCredentials := auth_api.MaaS360AdminAuth{
+	authCredentials := auth.MaaS360AdminAuth{
 		BillingID:  "123456",
 		AppID:      "testApp",
 		PlatformID: constants.Platform,

@@ -5,7 +5,6 @@ import (
 	"log"
 	"net/http"
 
-	auth_api "maas360api/auth"
 	"maas360api/internal/constants"
 )
 
@@ -17,13 +16,9 @@ type DeviceActionResponse struct {
 }
 
 // LockDevice sends a request to lock a specific device in MaaS360.
-func LockDevice(billingID string, deviceID string, maasToken string) error {
-	if billingID == "" || deviceID == "" || maasToken == "" {
-		return fmt.Errorf("billingID, deviceID, and maasToken must not be empty")
-	}
-	serviceURL, err := auth_api.GetServiceURL(billingID)
-	if err != nil {
-		return fmt.Errorf("error getting serviceURL: %v", err)
+func LockDevice(serviceURL string, billingID string, deviceID string, maasToken string) error {
+	if serviceURL == "" || billingID == "" || deviceID == "" || maasToken == "" {
+		return fmt.Errorf("serviceURL, billingID, deviceID, and maasToken must not be empty")
 	}
 
 	url := fmt.Sprintf("%s/device-apis/devices/1.0/lockDevice/%s?deviceId=%s", serviceURL, billingID, deviceID)

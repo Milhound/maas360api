@@ -8,7 +8,6 @@ import (
 	"net/http"
 	"net/url"
 
-	auth_api "maas360api/auth"
 	"maas360api/internal/constants"
 )
 
@@ -91,7 +90,7 @@ func (d *DeviceOrDevices) UnmarshalJSON(data []byte) error {
 
 // Search performs a search for devices in the MaaS360 API based on the provided filters.
 // It returns a list of devices that match the search criteria.
-func SearchDevices(billingID string, filters map[string]string, maasToken string) ([]Device, error) {
+func SearchDevices(serviceURL string, billingID string, filters map[string]string, maasToken string) ([]Device, error) {
 	// Possible search filters:
 	// "deviceStatus": "InActive", // ["Active", "InActive"] Default is "Active"
 	// "partialDeviceName":   "",
@@ -113,16 +112,8 @@ func SearchDevices(billingID string, filters map[string]string, maasToken string
 	// "ruleCompliance": "OOC", // ["OOC", "ALL"] Default is "ALL"
 	// "appCompliance": "OOC", // ["OOC", "ALL"] Default is "ALL"
 	// "pswdCompliance": "OOC", // ["OOC", "ALL"] Default is "ALL"
-
-	// Validate required fields
-	if len(billingID) == 0 || len(maasToken) == 0 {
-		return nil, fmt.Errorf("billingID and maasToken are required")
-	}
-
-	// Get the MaaS360 service URL
-	serviceURL, err := auth_api.GetServiceURL(billingID)
-	if err != nil {
-		return nil, err
+	if serviceURL == "" || billingID == "" || maasToken == "" {
+		return nil, fmt.Errorf("serviceURL, billing ID and maasToken cannot be empty")
 	}
 
 	jsonData, err := json.Marshal(filters)
@@ -182,8 +173,8 @@ func doSearchDevicesRequest(url string, maasToken string) ([]Device, error) {
 
 // PrintDevices retrieves and prints the list of devices based on the provided filters.
 // It calls SearchDevices to get the devices and then logs their details.
-func PrintDevices(billingID string, filters map[string]string, maasToken string) {
-	devices, err := SearchDevices(billingID, filters, maasToken)
+func PrintDevices(serviceURL string, billingID string, filters map[string]string, maasToken string) {
+	devices, err := SearchDevices(serviceURL, billingID, filters, maasToken)
 	if err != nil {
 		log.Fatalf("Error searching devices: %v", err)
 	}

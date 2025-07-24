@@ -8,7 +8,6 @@ import (
 	"net/http"
 	"time"
 
-	auth_api "maas360api/auth"
 	"maas360api/internal/constants"
 )
 
@@ -20,13 +19,13 @@ type HardwareInventoryResponse struct {
 
 // GetHardwareInventory retrieves the hardware inventory for a specific device in MaaS360.
 // It requires a billing ID, device ID, and an authentication token.
-func GetHardwareInventory(billingID string, deviceID string, maasToken string) (*HardwareInventoryResponse, error) {
+func GetHardwareInventory(serviceURL string, billingID string, deviceID string, maasToken string) (*HardwareInventoryResponse, error) {
+	if serviceURL == "" || billingID == "" || deviceID == "" || maasToken == "" {
+		return nil, fmt.Errorf("serviceURL, billingID, deviceID, and maasToken must not be empty")
+	}
+
 	if len(billingID) == 0 || len(deviceID) == 0 {
 		return nil, fmt.Errorf("billing ID and device ID cannot be empty")
-	}
-	serviceURL, err := auth_api.GetServiceURL(billingID)
-	if err != nil {
-		return nil, err
 	}
 
 	// Construct the hardware inventory URL
@@ -73,8 +72,8 @@ func doHardwareInventoryRequest(url string, maasToken string) (*HardwareInventor
 
 // PrintHardwareInventory prints the hardware inventory for a specific device in a human-readable format.
 // It retrieves the hardware inventory using GetHardwareInventory and formats the output.
-func PrintHardwareInventory(billingID string, deviceID string, maasToken string) {
-	hardwareInventory, err := GetHardwareInventory(billingID, deviceID, maasToken)
+func PrintHardwareInventory(serviceURL string, billingID string, deviceID string, maasToken string) {
+	hardwareInventory, err := GetHardwareInventory(serviceURL, billingID, deviceID, maasToken)
 	if err != nil {
 		log.Fatalf("Error getting hardware inventory: %v", err)
 	}

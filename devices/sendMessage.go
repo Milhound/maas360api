@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"net/url"
 
-	auth_api "maas360api/auth"
 	"maas360api/internal/constants"
 )
 
@@ -22,13 +21,9 @@ type actionResponse struct {
 
 // SendMessage sends a message to a specific device in MaaS360.
 // It requires a billing ID, device ID, an authentication token, and the message details.
-func SendMessage(billingID string, deviceID string, messageTitle string, message string, maasToken string) error {
-	if len(billingID) == 0 || len(deviceID) == 0 {
-		return fmt.Errorf("billing ID and device ID cannot be empty")
-	}
-	serviceURL, err := auth_api.GetServiceURL(billingID)
-	if err != nil {
-		return err
+func SendMessage(serviceURL string, billingID string, deviceID string, messageTitle string, message string, maasToken string) error {
+	if serviceURL == "" || billingID == "" || deviceID == "" || maasToken == "" {
+		return fmt.Errorf("serviceURL, billingID, deviceID, and maasToken must not be empty")
 	}
 
 	// Construct the message URL

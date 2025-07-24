@@ -8,7 +8,6 @@ import (
 	"net/http"
 	"time"
 
-	auth_api "maas360api/auth"
 	"maas360api/internal/constants"
 )
 
@@ -53,13 +52,9 @@ func (d *DeviceActionsResponse) GetActionByID(actionID string) (*DeviceAction, e
 }
 
 // GetDeviceActions retrieves the list of available device actions for a specific device.
-func GetDeviceActions(billingID string, deviceID string, maasToken string) (*DeviceActionsResponse, error) {
-	if billingID == "" || deviceID == "" || maasToken == "" {
-		return nil, fmt.Errorf("billingID, deviceID, and maasToken must not be empty")
-	}
-	serviceURL, err := auth_api.GetServiceURL(billingID)
-	if err != nil {
-		return nil, fmt.Errorf("error getting serviceURL: %v", err)
+func GetDeviceActions(serviceURL string, billingID string, deviceID string, maasToken string) (*DeviceActionsResponse, error) {
+	if serviceURL == "" || billingID == "" || deviceID == "" || maasToken == "" {
+		return nil, fmt.Errorf("serviceURL, billingID, deviceID, and maasToken must not be empty")
 	}
 
 	url := fmt.Sprintf("%s/device-apis/devices/1.0/deviceActions/%s?deviceId=%s", serviceURL, billingID, deviceID)
@@ -92,16 +87,16 @@ func GetDeviceActions(billingID string, deviceID string, maasToken string) (*Dev
 }
 
 // PerformDeviceAction performs a specific action on a device.
-func PerformDeviceAction(billingID string, deviceID string, actionID string, additionalParams map[string]string, maasToken string) error {
+func PerformDeviceAction(serviceURL string, billingID string, deviceID string, actionID string, additionalParams map[string]string, maasToken string) error {
 	// Notes:
 	// MDM_LOCATE: Not applicable action for iOS devices
 	// MDM_SCHEDULE_OS_UPDATE: Available for iOS devices, requires additionalParams
 
-	if billingID == "" || deviceID == "" || actionID == "" || maasToken == "" {
-		return fmt.Errorf("billingID, deviceID, actionID, and maasToken must not be empty")
+	if serviceURL == "" || billingID == "" || deviceID == "" || actionID == "" || maasToken == "" {
+		return fmt.Errorf("serviceURL, billingID, deviceID, actionID, and maasToken must not be empty")
 	}
 
-	actionsResponse, err := GetDeviceActions(billingID, deviceID, maasToken)
+	actionsResponse, err := GetDeviceActions(serviceURL, billingID, deviceID, maasToken)
 	if err != nil {
 		return fmt.Errorf("error getting device actions: %v", err)
 	}
@@ -116,7 +111,7 @@ func PerformDeviceAction(billingID string, deviceID string, actionID string, add
 	}
 
 	fmt.Printf("Performing action: %s\n", action.ActionName)
-	err = doAction(billingID, deviceID, action.ActionID, action.ActionName, additionalParams, maasToken)
+	err = doAction(serviceURL, billingID, deviceID, action.ActionID, action.ActionName, additionalParams, maasToken)
 
 	if err != nil {
 		return fmt.Errorf("error performing action: %v", err)
@@ -126,14 +121,11 @@ func PerformDeviceAction(billingID string, deviceID string, actionID string, add
 
 // doAction sends a request to perform a specific action on a device.
 // It constructs the request, sends it, and processes the response.
-func doAction(billingID string, deviceID string, actionID string, actionName string, additionalParams map[string]string, maasToken string) error {
-	if billingID == "" || deviceID == "" || actionID == "" || actionName == "" || maasToken == "" {
-		return fmt.Errorf("billingID, deviceID, actionName, and maasToken must not be empty")
+func doAction(serviceURL string, billingID string, deviceID string, actionID string, actionName string, additionalParams map[string]string, maasToken string) error {
+	if serviceURL == "" || billingID == "" || deviceID == "" || actionID == "" || actionName == "" || maasToken == "" {
+		return fmt.Errorf("serviceURL, billingID, deviceID, actionName, and maasToken must not be empty")
 	}
-	serviceURL, err := auth_api.GetServiceURL(billingID)
-	if err != nil {
-		return fmt.Errorf("error getting serviceURL: %v", err)
-	}
+
 	var reqBodyRaw ActionRequest
 	reqBodyRaw.Name = actionName
 	reqBodyRaw.ExpiryDate = time.Now().Local().Unix() + 300 // 5 minutes from now

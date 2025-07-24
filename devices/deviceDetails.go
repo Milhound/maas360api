@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	auth_api "maas360api/auth"
 	httputil "maas360api/internal/http"
 	"maas360api/internal/types"
 )
@@ -46,12 +45,10 @@ type DeviceResponse struct {
 	Device DeviceIdentifiers `json:"device"`
 }
 
-func GetDevice(billingID string, deviceID string, maasToken string) (*DeviceIdentifiers, error) {
-	serviceURL, err := auth_api.GetServiceURL(billingID)
-	if err != nil {
-		return nil, err
+func GetDevice(serviceURL string, billingID string, deviceID string, maasToken string) (*DeviceIdentifiers, error) {
+	if serviceURL == "" || billingID == "" || deviceID == "" || maasToken == "" {
+		return nil, fmt.Errorf("billingID, deviceID, and maasToken must not be empty")
 	}
-
 	searchURL := fmt.Sprintf("%s/device-apis/devices/1.0/core/%s?deviceId=%s", serviceURL, billingID, deviceID)
 
 	resp, err := httputil.DoMaaSRequest(httputil.RequestOptions{

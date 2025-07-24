@@ -8,7 +8,6 @@ import (
 	"net/http"
 	"net/url"
 
-	auth_api "maas360api/auth"
 	"maas360api/internal/constants"
 )
 
@@ -50,7 +49,7 @@ type CatalogAppsResponse struct {
 }
 
 // SearchCatalog retrieves applications from the MaaS360 catalog based on the provided filters.
-func SearchCatalog(billingID string, filters map[string]string, maasToken string) ([]CatalogApp, error) {
+func SearchCatalog(serviceURL string, billingID string, filters map[string]string, maasToken string) ([]CatalogApp, error) {
 	// Parameters:
 	// pageSize: Limit number of applications returned at one time. Allowed page sizes: 25, 50, 100, 200, 250. Default value: 25.
 	// pageNumber: The page number of the results to return. Default value: 1.
@@ -67,11 +66,7 @@ func SearchCatalog(billingID string, filters map[string]string, maasToken string
 	if len(billingID) == 0 || len(maasToken) == 0 {
 		return nil, fmt.Errorf("billing ID and maasToken cannot be empty")
 	}
-	// Get the MaaS360 service URL
-	serviceURL, err := auth_api.GetServiceURL(billingID)
-	if err != nil {
-		return nil, err
-	}
+
 	if filters == nil {
 		return nil, fmt.Errorf("search parameters cannot be nil")
 	} else if len(filters) == 0 {
@@ -130,8 +125,8 @@ func doSearchCatalogRequest(url string, maasToken string) ([]CatalogApp, error) 
 
 // PrintCatalogApps retrieves and prints the catalog applications for a given billing ID.
 // It uses SearchCatalog to get the list of applications and formats the output.
-func PrintCatalogApps(billingID string, filters map[string]string, maasToken string) {
-	apps, err := SearchCatalog(billingID, filters, maasToken)
+func PrintCatalogApps(serviceURL string, billingID string, filters map[string]string, maasToken string) {
+	apps, err := SearchCatalog(serviceURL, billingID, filters, maasToken)
 	if err != nil {
 		log.Fatalf("Error searching catalog: %v", err)
 	}

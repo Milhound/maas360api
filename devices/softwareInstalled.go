@@ -7,7 +7,6 @@ import (
 	"log"
 	"net/http"
 
-	auth_api "maas360api/auth"
 	"maas360api/internal/constants"
 )
 
@@ -33,13 +32,9 @@ type SoftwareInstalledResponse struct {
 }
 
 // GetSoftwareInstalled retrieves the software installed on a specific device in MaaS360.
-func GetSoftwareInstalled(billingID string, deviceID string, maasToken string) (*SoftwareInstalledResponse, error) {
-	if len(billingID) == 0 || len(deviceID) == 0 {
-		return nil, fmt.Errorf("billing ID and device ID cannot be empty")
-	}
-	serviceURL, err := auth_api.GetServiceURL(billingID)
-	if err != nil {
-		return nil, err
+func GetSoftwareInstalled(serviceURL string, billingID string, deviceID string, maasToken string) (*SoftwareInstalledResponse, error) {
+	if serviceURL == "" || billingID == "" || deviceID == "" || maasToken == "" {
+		return nil, fmt.Errorf("serviceURL, billingID, deviceID, and maasToken must not be empty")
 	}
 
 	// Construct the hardware inventory URL
@@ -88,8 +83,8 @@ func doGetSoftwareInstalled(url string, maasToken string) (*SoftwareInstalledRes
 
 // PrintSoftwareInstalled prints the software installed on a specific device in a human-readable format.
 // It retrieves the software installed using GetSoftwareInstalled and formats the output.
-func PrintSoftwareInstalled(billingID string, deviceID string, maasToken string) {
-	softwareInstalled, err := GetSoftwareInstalled(billingID, deviceID, maasToken)
+func PrintSoftwareInstalled(serviceURL string, billingID string, deviceID string, maasToken string) {
+	softwareInstalled, err := GetSoftwareInstalled(serviceURL, billingID, deviceID, maasToken)
 	if err != nil {
 		log.Fatalf("Error getting hardware inventory: %v", err)
 	}

@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io"
 	"log"
-	"maas360api/auth"
 	httputil "maas360api/internal/http"
 	"net/http"
 )
@@ -14,14 +13,9 @@ type NetworkInformationWrapper struct {
 	NetworkInformation DeviceAttributesResponse `json:"networkInformation"`
 }
 
-func GetNetworkInfo(billingID string, deviceID string, maasToken string) ([]DeviceAttribute, error) {
-	if billingID == "" || deviceID == "" || maasToken == "" {
+func GetNetworkInfo(serviceURL string, billingID string, deviceID string, maasToken string) ([]DeviceAttribute, error) {
+	if serviceURL == "" || billingID == "" || deviceID == "" || maasToken == "" {
 		return nil, fmt.Errorf("billingID, deviceID, and maasToken must not be empty")
-	}
-
-	serviceURL, err := auth.GetServiceURL(billingID)
-	if err != nil {
-		return nil, err
 	}
 
 	searchURL := fmt.Sprintf("%s/device-apis/devices/1.0/mdNetworkInformation/%s?deviceId=%s", serviceURL, billingID, deviceID)
@@ -53,8 +47,8 @@ func GetNetworkInfo(billingID string, deviceID string, maasToken string) ([]Devi
 	return wrapper.NetworkInformation.AttributeWrapper.DeviceAttributes, nil
 }
 
-func PrintNetworkInfo(billingID string, deviceID string, maasToken string) {
-	networkInfo, err := GetNetworkInfo(billingID, deviceID, maasToken)
+func PrintNetworkInfo(serviceURL string, billingID string, deviceID string, maasToken string) {
+	networkInfo, err := GetNetworkInfo(serviceURL, billingID, deviceID, maasToken)
 	if err != nil {
 		log.Fatalf("Error getting network info: %v", err)
 	}
