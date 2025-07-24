@@ -1,21 +1,18 @@
 package devices
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
-	"net/http"
-
 	"maas360api/internal/constants"
+	"net/http"
 )
 
-// LockDevice sends a request to lock a specific device in MaaS360.
-func LockDevice(serviceURL string, billingID string, deviceID string, maasToken string) error {
+func HideDevice(serviceURL string, billingID string, deviceID string, maasToken string) error {
 	if serviceURL == "" || billingID == "" || deviceID == "" || maasToken == "" {
 		return fmt.Errorf("serviceURL, billingID, deviceID, and maasToken must not be empty")
 	}
-
-	url := fmt.Sprintf("%s/device-apis/devices/1.0/lockDevice/%s?deviceId=%s", serviceURL, billingID, deviceID)
-
+	url := fmt.Sprintf("%s/device-apis/devices/1.0/hideDevice/%s?deviceId=%s", serviceURL, billingID, deviceID)
 	req, err := http.NewRequest("POST", url, nil)
 	if err != nil {
 		return fmt.Errorf("error creating HTTP request: %v", err)
@@ -32,10 +29,12 @@ func LockDevice(serviceURL string, billingID string, deviceID string, maasToken 
 		return fmt.Errorf("unexpected HTTP status: %s", resp.Status)
 	}
 	var response DeviceActionResponse
-	if response.ActionStatus != 0 {
-		return fmt.Errorf("failed to lock device: %s", response.Description)
-	} else {
-		log.Printf("Device %s lock scheduled successfully", deviceID)
-		return nil
+	if err := json.NewDecoder(resp.Body).Decode(&response); err != nil {
+		return fmt.Errorf("error decoding response: %v", err)
 	}
+	if response.ActionStatus != 0 {
+		return fmt.Errorf("failed to hide device: %s", response.Description)
+	}
+	log.Printf("Device %s hidden successfully", deviceID)
+	return nil
 }

@@ -133,3 +133,16 @@ func (c *MaaS360Client) GetNetworkInfo(deviceID string) ([]devices.DeviceAttribu
 func (c *MaaS360Client) PrintNetworkInfo(deviceID string) {
 	devices.PrintNetworkInfo(c.ServiceURL, c.BillingID, deviceID, c.MaasToken)
 }
+
+func (c *MaaS360Client) GetDeviceAttributes(deviceID string) (*devices.DeviceIdentity, error) {
+	return devices.GetDeviceAttributes(c.ServiceURL, c.BillingID, deviceID, c.MaasToken)
+}
+
+func (c *MaaS360Client) PrintDeviceAttributes(deviceID string) {
+	devices.PrintDeviceAttributes(c.ServiceURL, c.BillingID, deviceID, c.MaasToken)
+
+}
+
+func (c *MaaS360Client) HideDevice(deviceID string) error {
+	return devices.HideDevice(c.ServiceURL, c.BillingID, deviceID, c.MaasToken)
+}

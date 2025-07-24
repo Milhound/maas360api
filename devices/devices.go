@@ -19,4 +19,11 @@ type DeviceAttributesResponse struct {
 	AttributeWrapper DeviceAttributesWrapper `json:"deviceAttributes"`
 }
 
+type DeviceActionResponse struct {
+	Maas360DeviceID string `json:"maas360DeviceId"`
+	ActionStatus    int    `json:"actionStatus"`
+	ActionID        int    `json:"actionID"`
+	Description     string `json:"description"`
+}
+
 var client = httputil.GetSharedClient()
