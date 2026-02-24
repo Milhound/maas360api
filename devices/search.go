@@ -9,57 +9,58 @@ import (
 	"net/url"
 
 	"maas360api/internal/constants"
+	"maas360api/internal/types"
 )
 
 // Device represents a MaaS360 device.
 type Device struct {
-	AppComplianceStatus          string `json:"appComplianceState"`
-	AssetTag                     string `json:"customAssetNumber"`
-	DeviceOwner                  string `json:"deviceOwner"`
-	Email                        string `json:"emailAddress"`
-	EncryptionStatus             string `json:"encryptionStatus"`
-	FirstRegisteredInEpochms     any    `json:"firstRegisteredInEpochms"` // String or int64 | Empty string if not set
-	ID                           any    `json:"maas360DeviceID"`          // String or int32 | Empty string if not set
-	IMEI                         any    `json:"imeiEsn"`                  // String or int64 | Empty string if not set
-	InstalledDate                string `json:"installedDate"`
-	InstalledDateInEpochms       any    `json:"installedDateInEpochms"` // String or int64 | Empty string if not set
-	JailbreakStatus              string `json:"jailbreakStatus"`
-	LastMDMRegisteredInEpochms   any    `json:"lastMdmRegisteredInEpochms"` // String or int64 | Empty string if not set
-	LastReported                 string `json:"lastReported"`
-	LastReportedInEpochms        any    `json:"lastReportedInEpochms"`   // String or int64 | Empty string if not set
-	LastRegisteredInEpochms      any    `json:"lastRegisteredInEpochms"` // String or int64 | Empty string if not set
-	MacAddress                   string `json:"wifiMacAddress"`
-	MailboxID                    any    `json:"mailboxDeviceId"` // String or int64 | Empty string if not set
-	MailboxLastRepoted           string `json:"mailboxLastReported"`
-	MailboxLastReportedInEpochms any    `json:"mailboxLastReportedInEpochms"` // String or int64 | Empty string if not set
-	MailboxStatus                string `json:"mailboxManaged"`
-	MDMPolicy                    string `json:"mdmPolicy"`
-	MDMMailboxDeviceID           string `json:"mdmMailboxDeviceId"`
-	ManagedStatus                string `json:"maas360ManagedStatus"`
-	Manufacturer                 string `json:"manufacturer"`
-	Model                        string `json:"modelId"`
-	Name                         string `json:"deviceName"`
-	OS                           string `json:"osName"`
-	OSVersion                    any    `json:"osVersion"` // String or int32
-	Ownership                    string `json:"ownership"`
-	PasscodeComplianceStatus     string `json:"passcodeCompliance"`
-	PhoneNumber                  any    `json:"phoneNumber"` // String or int64 | Empty string if not set
-	Platform                     string `json:"platformName"`
-	PolicyComplianceStatus       string `json:"policyComplianceState"`
-	RuleComplianceStatus         string `json:"ruleComplianceState"`
-	SelectiveWipeStatus          string `json:"selectiveWipeStatus"`
-	SerialNumber                 string `json:"platformSerialNumber"`
-	ServicePack                  string `json:"osServicePack"`
-	Status                       string `json:"deviceStatus"`
-	Supervised                   bool   `json:"isSupervisedDevice"`
-	TestDevice                   bool   `json:"testDevice"`
-	TravelerDeviceID             any    `json:"unifiedTravelerDeviceId"` // String or int64 | Empty string if not set
-	Type                         string `json:"deviceType"`
-	UDID                         string `json:"udid"`
-	UserDomain                   string `json:"userDomain"`
-	Username                     string `json:"username"`
-	EnrollmentMode               string `json:"enrollmentMode"`
-	SourceID                     int32  `json:"sourceID"`
+	AppComplianceStatus          string            `json:"appComplianceState"`
+	AssetTag                     string            `json:"customAssetNumber"`
+	DeviceOwner                  string            `json:"deviceOwner"`
+	Email                        string            `json:"emailAddress"`
+	EncryptionStatus             string            `json:"encryptionStatus"`
+	FirstRegisteredInEpochms     types.FlexibleInt `json:"firstRegisteredInEpochms"`
+	ID                           types.FlexibleInt `json:"maas360DeviceID"`
+	IMEI                         types.FlexibleInt `json:"imeiEsn"`
+	InstalledDate                string            `json:"installedDate"`
+	InstalledDateInEpochms       types.FlexibleInt `json:"installedDateInEpochms"`
+	JailbreakStatus              string            `json:"jailbreakStatus"`
+	LastMDMRegisteredInEpochms   types.FlexibleInt `json:"lastMdmRegisteredInEpochms"`
+	LastReported                 string            `json:"lastReported"`
+	LastReportedInEpochms        types.FlexibleInt `json:"lastReportedInEpochms"`
+	LastRegisteredInEpochms      types.FlexibleInt `json:"lastRegisteredInEpochms"`
+	MacAddress                   string            `json:"wifiMacAddress"`
+	MailboxID                    types.FlexibleInt `json:"mailboxDeviceId"`
+	MailboxLastRepoted           string            `json:"mailboxLastReported"`
+	MailboxLastReportedInEpochms types.FlexibleInt `json:"mailboxLastReportedInEpochms"`
+	MailboxStatus                string            `json:"mailboxManaged"`
+	MDMPolicy                    string            `json:"mdmPolicy"`
+	MDMMailboxDeviceID           string            `json:"mdmMailboxDeviceId"`
+	ManagedStatus                string            `json:"maas360ManagedStatus"`
+	Manufacturer                 string            `json:"manufacturer"`
+	Model                        string            `json:"modelId"`
+	Name                         string            `json:"deviceName"`
+	OS                           string            `json:"osName"`
+	OSVersion                    any               `json:"osVersion"` // String, float or int32
+	Ownership                    string            `json:"ownership"`
+	PasscodeComplianceStatus     string            `json:"passcodeCompliance"`
+	PhoneNumber                  types.FlexibleInt `json:"phoneNumber"`
+	Platform                     string            `json:"platformName"`
+	PolicyComplianceStatus       string            `json:"policyComplianceState"`
+	RuleComplianceStatus         string            `json:"ruleComplianceState"`
+	SelectiveWipeStatus          string            `json:"selectiveWipeStatus"`
+	SerialNumber                 string            `json:"platformSerialNumber"`
+	ServicePack                  string            `json:"osServicePack"`
+	Status                       string            `json:"deviceStatus"`
+	Supervised                   bool              `json:"isSupervisedDevice"`
+	TestDevice                   bool              `json:"testDevice"`
+	TravelerDeviceID             types.FlexibleInt `json:"unifiedTravelerDeviceId"`
+	Type                         string            `json:"deviceType"`
+	UDID                         string            `json:"udid"`
+	UserDomain                   string            `json:"userDomain"`
+	Username                     string            `json:"username"`
+	EnrollmentMode               string            `json:"enrollmentMode"`
+	SourceID                     int32             `json:"sourceID"`
 }
 
 type DeviceOrDevices []Device
